@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Bird Side Quests</title>
+        <link rel="icon" href="data:," />
+        <!-- The map: Leaflet draws it, OpenStreetMap supplies the street tiles. Without them the page still works, with a list in place of the map. -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+        <link rel="stylesheet" href="/style.css" />
+    </head>
+    <body>
+        <main>
+            <header>
+                <svg class="banner-sky" viewBox="0 0 260 150" aria-hidden="true">
+                    <circle cx="196" cy="58" r="52" fill="#f3cd6b" opacity="0.18" />
+                    <circle cx="196" cy="58" r="34" fill="#f3cd6b" opacity="0.85" />
+                    <g fill="none" stroke="#3a4a3a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M52 66 q9 -10 18 0 q9 -10 18 0" />
+                        <path d="M98 36 q7 -8 14 0 q7 -8 14 0" />
+                        <path d="M126 88 q6 -7 12 0 q6 -7 12 0" />
+                    </g>
+                </svg>
+                <div class="banner-text">
+                    <div class="stamp">New York City · field quests</div>
+                    <h1>Bird Side Quests</h1>
+                    <p>Find something cool to see outside, from what birdwatchers near you reported this week.</p>
+                </div>
+                <svg class="banner-land" viewBox="0 0 820 96" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+                    <path d="M0 46 C110 14 210 40 330 26 C450 12 540 48 650 28 C720 16 780 30 820 22 L820 96 L0 96 Z" fill="#b7d3a4" />
+                    <path d="M0 66 C100 42 210 74 320 56 C430 38 520 80 640 58 C720 44 780 62 820 56 L820 96 L0 96 Z" fill="#8ab87c" />
+                    <g fill="#3f7a4a">
+                        <path d="M118 66 l11 -36 l11 36 z" />
+                        <path d="M142 70 l8 -27 l8 27 z" />
+                        <path d="M512 74 l12 -40 l12 40 z" />
+                        <path d="M538 76 l9 -29 l9 29 z" />
+                        <path d="M690 60 l10 -33 l10 33 z" />
+                        <circle cx="300" cy="46" r="13" />
+                        <rect x="298" y="52" width="4" height="16" />
+                        <circle cx="326" cy="53" r="9" />
+                        <rect x="324.5" y="57" width="3" height="12" />
+                    </g>
+                    <path d="M0 84 C140 62 260 90 400 76 C540 62 660 92 820 74 L820 96 L0 96 Z" fill="#5a9160" />
+                </svg>
+            </header>
+
+            <section class="about" aria-label="About this agent">
+                <div>
+                    <h2>What it explores</h2>
+                    <p>
+                        Recent bird sightings in New York City from two volunteer-run sources,
+                        <a href="https://ebird.org" target="_blank" rel="noopener noreferrer">eBird</a> and
+                        <a href="https://www.inaturalist.org" target="_blank" rel="noopener noreferrer">iNaturalist</a>: what was seen where, what is unusual for the
+                        place and season, and whether both sources back it up.
+                    </p>
+                </div>
+                <div>
+                    <h2>Who it's for</h2>
+                    <p>Beginner birdwatchers with a spare hour, who want a short outing nearby and a reason to pick one park over another.</p>
+                </div>
+                <div>
+                    <h2>How to use it</h2>
+                    <ol>
+                        <li>Say where you are and how long you have, or pick your spot on the map.</li>
+                        <li>Watch the team search, then go and find the birds on your quest.</li>
+                        <li>Mark the ones you find. They are stamped in your field journal.</li>
+                    </ol>
+                </div>
+            </section>
+
+            <section class="ask">
+                <form id="task">
+                    <label for="question" id="question-label">Where are you, and how long do you have?</label>
+                    <textarea id="question" placeholder="e.g. I'm near Columbia University and have an hour. I'm a beginner." autocomplete="off"></textarea>
+                    <div class="row">
+                        <button id="run" class="primary" type="submit">Plan my outing</button>
+                        <button id="reset" class="quiet" type="button">Start over</button>
+                        <span id="status" role="status" aria-live="polite"></span>
+                    </div>
+                </form>
+
+                <details class="setup" id="setup">
+                    <summary>Or pick your spot on the map</summary>
+                    <div class="setup-body">
+                        <div id="picker" class="map picker-map" role="application" aria-label="Click the map to say where you are"></div>
+                        <div class="setup-row">
+                            <span>I have</span>
+                            <div class="chips" role="group" aria-label="How long you have">
+                                <button type="button" class="time-chip" data-minutes="30" data-words="30 minutes" aria-pressed="false">30 minutes</button>
+                                <button type="button" class="time-chip" data-minutes="60" data-words="1 hour" aria-pressed="true">1 hour</button>
+                                <button type="button" class="time-chip" data-minutes="120" data-words="2 hours" aria-pressed="false">2 hours</button>
+                            </div>
+                            <button type="button" id="locate" class="quiet">Use my location</button>
+                        </div>
+                        <p class="viz-note" id="picker-note">Click the map where you are. Anything you typed above is sent along with it, such as a bird you hope to see.</p>
+                        <div><button type="button" id="plan-here" class="primary" disabled>Plan from this spot</button></div>
+                    </div>
+                </details>
+
+                <div class="samples">
+                    Or try one of these:
+                    <ul id="samples"></ul>
+                </div>
+            </section>
+
+            <section class="journal" aria-label="Field journal">
+                <div class="journal-head">
+                    <h2>Field journal</h2>
+                    <span id="journal-count"></span>
+                </div>
+                <p class="viz-note" id="journal-empty">No birds yet. Mark one "Found it!" on a quest and it is stamped here, and kept in this browser.</p>
+                <ul id="stamps"></ul>
+                <div id="journal-tools" hidden>
+                    <input type="checkbox" id="skip-seen" checked />
+                    <label for="skip-seen">Tell the agent which birds I've found, so it looks for new ones</label>
+                    <button id="clear-seen" class="quiet" type="button">Empty the journal</button>
+                </div>
+                <details id="journal-credits" hidden>
+                    <summary>Photo credits</summary>
+                    <ul></ul>
+                </details>
+            </section>
+
+            <section id="thread" aria-label="Conversation"></section>
+
+            <footer>
+                <p>Sightings come from eBird (Cornell Lab of Ornithology) and iNaturalist. They show what people reported, not every bird that is there.</p>
+                <p><button id="toggle-context" class="quiet" type="button">Show what each agent saw</button></p>
+            </footer>
+        </main>
+
+        <script src="/context-panel.js"></script>
+        <script src="/outing.js"></script>
+        <script>
+            const $ = (id) => document.getElementById(id);
+
+            const SAMPLES = [
+                "I'm near Columbia University and have an hour. I'm a beginner. Where should I go to see something cool?",
+                "I'm at Bryant Park with 45 minutes. I've already seen pigeons, house sparrows and starlings. What's new for me nearby?",
+                "I'm at the Grand Army Plaza entrance of Prospect Park with two hours. Which sightings nearby are unusual for this time of year?",
+                "Find me something cool to see outside.",
+            ];
+
+            // What each tool call means, in words a birdwatcher would use
+            const STEPS = {
+                find_birding_spots: "listing birding spots nearby (eBird)",
+                unusual_sightings: "checking what is unusual nearby (eBird)",
+                research: "sending out a researcher",
+                sightings_at_spot: "reading recent sightings (eBird)",
+                inaturalist_sightings: "cross-checking observations (iNaturalist)",
+                season_history: "checking the season history (iNaturalist)",
+                sightings_on_date: "reading that day's sightings (eBird)",
+            };
+            const ROLES = { Lead: "finds you and picks the spots", Writer: "writes the plan from the findings", "Citation check": "checks every link against the records" };
+
+            let source = null; // the open event stream, while a request runs
+            let runId = null; // this run's contexts, for the context panel
+            let sessionId = null; // the server keeps one conversation per session, so an answer continues the request
+            let timer = null;
+            let turn = null; // the reply being built: {el, crew, agents, stage}
+            const FIRST_LABEL = $("question-label").textContent;
+            const FIRST_PLACEHOLDER = $("question").placeholder;
+
+            // --- Small helpers ---
+
+            function el(tag, className, text) {
+                const node = document.createElement(tag);
+                if (className) node.className = className;
+                if (text !== undefined) node.textContent = text;
+                return node;
+            }
+
+            const escapeHtml = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+            // A bare link gets a short name instead of its full address
+            function linkName(url) {
+                if (url.includes("ebird.org/checklist")) return "eBird checklist";
+                if (url.includes("ebird.org/hotspot")) return "eBird spot";
+                if (url.includes("ebird.org/species")) return "eBird species";
+                if (/inaturalist\.org\/observations\/\d+/.test(url)) return "iNaturalist observation";
+                if (url.includes("inaturalist.org")) return "iNaturalist records";
+                return "source";
+            }
+
+            // The plan is markdown written by a model from volunteer-entered text, so nothing in it is
+            // trusted as HTML: every piece is escaped, and only these few patterns become tags.
+            function inlineMarkdown(text) {
+                const emphasis = (s) => escapeHtml(s).replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/\*([^*\s][^*]*)\*/g, "<em>$1</em>");
+                const links = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s)<>\]]+)/g;
+                let html = "";
+                let last = 0;
+                for (const match of text.matchAll(links)) {
+                    html += emphasis(text.slice(last, match.index));
+                    let url = match[2] ?? match[3];
+                    let after = "";
+                    if (!match[2]) {
+                        // A bare link at the end of a sentence: the full stop is not part of it
+                        const trimmed = url.replace(/[.,;:]+$/, "");
+                        after = url.slice(trimmed.length);
+                        url = trimmed;
+                    }
+                    // One short name per kind of source, whatever label the model wrote: the labels it
+                    // invents run long ("St. John the Divine (Amsterdam Ave…) eBird Hotspot") and vary.
+                    const known = linkName(url);
+                    const name = known !== "source" || !match[1] ? escapeHtml(known) : emphasis(match[1]);
+                    html += `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${name}</a>${escapeHtml(after)}`;
+                    last = match.index + match[0].length;
+                }
+                return html + emphasis(text.slice(last));
+            }
+
+            function renderMarkdown(markdown) {
+                const out = el("div", "plan");
+                let list = null;
+                let paragraph = [];
+                const flush = () => {
+                    if (!paragraph.length) return;
+                    const text = paragraph.join(" ");
+                    const p = el("p");
+                    // The closing note about the records is one italic paragraph: set it apart
+                    if (/^\*About these records/.test(text)) {
+                        p.className = "data-note";
+                        p.innerHTML = inlineMarkdown(text.replace(/^\*|\*$/g, ""));
+                    } else {
+                        p.innerHTML = inlineMarkdown(text);
+                    }
+                    out.appendChild(p);
+                    paragraph = [];
+                };
+                for (const raw of markdown.split("\n")) {
+                    const line = raw.trim();
+                    const heading = line.match(/^(#{1,4})\s+(.*)$/);
+                    const bullet = line.match(/^[-*]\s+(.*)$/);
+                    if (heading) {
+                        flush();
+                        list = null;
+                        out.appendChild(el("h3")).innerHTML = inlineMarkdown(heading[2]);
+                    } else if (bullet) {
+                        flush();
+                        if (!list) list = out.appendChild(el("ul"));
+                        list.appendChild(el("li")).innerHTML = inlineMarkdown(bullet[1]);
+                    } else if (!line) {
+                        flush();
+                        list = null;
+                    } else {
+                        list = null;
+                        paragraph.push(line);
+                    }
+                }
+                flush();
+                return out;
+            }
+
+            // --- The crew: one line per agent, showing what it is doing right now ---
+
+            function crewRow(name) {
+                if (turn.agents[name]) return turn.agents[name];
+                const row = el("div", "crew-row");
+                const dot = el("span", "crew-dot");
+                const who = el("span", "crew-name", name);
+                const sub = el("span", "crew-sub", ROLES[name] ?? "");
+                const step = el("span", "crew-step", "starting");
+                row.append(dot, who, sub, step);
+                // In the order they work: the Lead, its researchers, then the Writer and the check
+                const researchers = [...turn.crew.children].filter((r) => r.dataset.agent.startsWith("Researcher"));
+                if (name === "Lead") turn.crew.prepend(row);
+                else if (name.startsWith("Researcher") && researchers.length) researchers.at(-1).after(row);
+                else if (name.startsWith("Researcher") && turn.agents.Lead) turn.agents.Lead.row.after(row);
+                else turn.crew.appendChild(row);
+                row.dataset.agent = name;
+                turn.agents[name] = { row, sub, step };
+                return turn.agents[name];
+            }
+
+            function showActivity(name, text) {
+                const agent = crewRow(name);
+                const done = (words) => {
+                    agent.row.classList.add("done");
+                    agent.step.textContent = words;
+                };
+                if (text === "started") return;
+                if (text.startsWith("called ")) return void (agent.step.textContent = STEPS[text.slice(7)] ?? text);
+                if (text.startsWith("checking ")) return void (agent.sub.textContent = shortPlace(text.slice(9)));
+                if (text.startsWith("finished: ")) {
+                    if (name === "Lead") return done(text === "finished: DONE" ? "handed the findings to the Writer" : "replied");
+                    return done(name.startsWith("Researcher") ? "reported back" : "done");
+                }
+                // Anything else is a sentence of its own: the citation check's result, or a limit that was hit
+                if (name === "Citation check" && text.startsWith("all ")) return done(text);
+                agent.step.textContent = text;
+            }
+
+            // The research, drawn on the map as it happens
+            function showStage(event) {
+                if (!turn.stage) {
+                    turn.stage = createStage();
+                    turn.el.prepend(turn.stage.el);
+                }
+                if (event.step === "start") turn.stage.setStart(event.lat, event.lng, event.spots);
+                else if (event.step === "spot") turn.stage.addSpot(event);
+                else turn.stage.report(event.location_id, event.step === "reported");
+            }
+
+            // --- The work behind a reply: every tool call, as /chat returns them ---
+
+            function showWork(toolCalls) {
+                const details = el("details", "work");
+                details.appendChild(el("summary", "", `Show the work: ${toolCalls.length} tool call${toolCalls.length === 1 ? "" : "s"}`));
+                const list = details.appendChild(el("ul", "calls"));
+                for (const call of toolCalls) {
+                    const item = list.appendChild(el("li"));
+                    item.appendChild(el("span", "who", call.agent + " "));
+                    item.appendChild(el("code", "", `${call.name}(${JSON.stringify(call.args)})`));
+                    const result = item.appendChild(el("details"));
+                    result.appendChild(el("summary", "", `result, ${call.result.length.toLocaleString()} characters`));
+                    // Shown only when opened: two dozen results are about 100 KB of text
+                    result.addEventListener("toggle", () => {
+                        if (result.open && !result.querySelector("pre")) result.appendChild(el("pre", "", call.result.slice(0, 6000) + (call.result.length > 6000 ? "\n…" : "")));
+                    });
+                }
+                return details;
+            }
+
+            // --- One request, start to finish ---
+
+            function setBusy(busy, status) {
+                $("run").disabled = busy;
+                $("status").textContent = status ?? "";
+                clearInterval(timer);
+                if (busy) {
+                    const began = Date.now();
+                    timer = setInterval(() => ($("status").textContent = `Working… ${Math.round((Date.now() - began) / 1000)} s`), 1000);
+                }
+            }
+
+            function finish(status) {
+                setBusy(false, status);
+                if (source) source.close();
+                source = null;
+                // An agent with no "finished" line (the run stopped early) should not look busy forever
+                for (const agent of Object.values(turn?.agents ?? {})) {
+                    if (!agent.row.classList.contains("done")) {
+                        agent.row.classList.add("done");
+                        agent.step.textContent = "stopped";
+                    }
+                }
+            }
+
+            function showPlan(event) {
+                const run = readRun(event.tool_calls ?? []);
+                // The map has been up since the Lead found the visitor. If its events never arrived, draw it now.
+                if (!turn.stage && run.start && run.spots.length) {
+                    turn.stage = createStage();
+                    turn.el.prepend(turn.stage.el);
+                }
+                turn.stage?.finish(run);
+
+                const plan = renderMarkdown(event.markdown);
+                const quest = questCard(run);
+                if (!quest) {
+                    // Nothing to make a quest of: the plan as written
+                    turn.el.appendChild(el("div", "label", "Your outing"));
+                    turn.el.appendChild(plan);
+                    return;
+                }
+                // The quest opens with the Writer's own answer; the rest of the plan folds away below it
+                const opening = plan.firstElementChild;
+                if (opening?.tagName === "P" && !opening.classList.contains("data-note")) quest.querySelector(".quest-brief").appendChild(opening);
+                quest.querySelector(".quest-brief").classList.add("plan");
+                turn.el.appendChild(quest);
+
+                const sources = plan.querySelectorAll("a").length;
+                const full = el("details", "full-plan");
+                full.appendChild(el("summary", "", `Read the full plan: every spot, with a source for each fact (${sources} source link${sources === 1 ? "" : "s"})`));
+                full.appendChild(plan);
+                turn.el.appendChild(full);
+
+                const timeline = drawTimeline(run);
+                if (timeline) turn.el.appendChild(timeline);
+                if (turn.stage) linkViews(turn.stage, quest, timeline);
+            }
+
+            function showReply(event) {
+                $("question-label").textContent = FIRST_LABEL;
+                $("question").placeholder = FIRST_PLACEHOLDER;
+                if (event.kind === "question") {
+                    const box = el("div", "question");
+                    box.appendChild(el("div", "label", "Before I look, I need to know"));
+                    box.appendChild(el("div", "", event.markdown));
+                    turn.el.appendChild(box);
+                    // The next message is the answer, sent in the same session
+                    $("question-label").textContent = "Your answer";
+                    $("question").placeholder = "e.g. I'm at Bryant Park and have 45 minutes.";
+                    $("question").focus();
+                    finish("Waiting for your answer");
+                } else if (event.kind === "notice") {
+                    turn.el.appendChild(el("p", "notice", event.markdown));
+                    finish("");
+                } else {
+                    showPlan(event);
+                    finish("Done");
+                }
+                if (event.tool_calls?.length) turn.el.appendChild(showWork(event.tool_calls));
+            }
+
+            function ask(question) {
+                if (source) source.close();
+                // The collection travels in the message itself, so what the agent was told is on the page
+                if ($("skip-seen").checked && seenBirds().length) question += `\n\nBirds I've already seen: ${seenBirds().join(", ")}.`;
+                $("thread").appendChild(el("div", "you", question));
+                const block = el("div", "turn");
+                const crew = block.appendChild(el("div", "crew"));
+                crew.setAttribute("aria-label", "The team at work");
+                turn = { el: block, crew, agents: {}, stage: null };
+                $("thread").appendChild(block);
+                document.body.classList.add("on-quest"); // the sample requests step aside once a conversation starts
+                block.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+                $("question").value = "";
+                $("question-label").textContent = FIRST_LABEL;
+                $("question").placeholder = FIRST_PLACEHOLDER;
+                setBusy(true, "Working…");
+                if (document.body.classList.contains("show-context")) resetContext();
+
+                const params = new URLSearchParams({ question });
+                if (sessionId) params.set("session_id", sessionId);
+                source = new EventSource("/run?" + params);
+                source.onmessage = (message) => {
+                    const event = JSON.parse(message.data);
+                    if (event.type === "start") {
+                        runId = event.run_id;
+                        sessionId = event.session_id;
+                    } else if (event.type === "context") {
+                        // Only fetched while the panel is open: it is a few hundred KB over a run
+                        if (document.body.classList.contains("show-context")) showContext(runId);
+                    } else if (event.type === "activity") showActivity(event.agent, event.text);
+                    else if (event.type === "stage") showStage(event);
+                    else if (event.type === "done") showReply(event);
+                    else if (event.type === "error") {
+                        turn.el.appendChild(el("p", "error", event.message));
+                        finish("Failed");
+                    }
+                };
+                source.onerror = () => {
+                    turn.el.appendChild(el("p", "error", "Lost the connection to the server."));
+                    finish("Failed");
+                };
+            }
+
+            // --- Wiring ---
+
+            $("task").addEventListener("submit", (e) => {
+                e.preventDefault();
+                const question = $("question").value.trim();
+                if (question && !$("run").disabled) ask(question);
+            });
+
+            // Enter sends, Shift+Enter adds a line
+            $("question").addEventListener("keydown", (e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    $("task").requestSubmit();
+                }
+            });
+
+            for (const sample of SAMPLES) {
+                const button = el("button", "", sample);
+                button.type = "button";
+                button.addEventListener("click", () => {
+                    $("question").value = sample;
+                    $("question").focus();
+                });
+                $("samples").appendChild(el("li")).appendChild(button);
+            }
+
+            $("reset").addEventListener("click", () => {
+                if (source) source.close();
+                source = null;
+                // Forget the conversation on the server too, so the next request starts clean
+                if (sessionId) fetch("/clear?session_id=" + encodeURIComponent(sessionId), { method: "POST" });
+                sessionId = null;
+                runId = null;
+                turn = null;
+                document.body.classList.remove("on-quest");
+                $("thread").replaceChildren();
+                $("question").value = "";
+                $("question-label").textContent = FIRST_LABEL;
+                $("question").placeholder = FIRST_PLACEHOLDER;
+                setBusy(false, "");
+                resetContext();
+            });
+
+            // --- The field journal: the birds the visitor has found, as stamps ---
+
+            function showJournal() {
+                const entries = journalEntries();
+                $("journal-count").textContent = entries.length ? `${entries.length} bird${entries.length === 1 ? "" : "s"} found` : "";
+                $("journal-empty").hidden = entries.length > 0;
+                $("journal-tools").hidden = !entries.length;
+                const credits = $("journal-credits").querySelector("ul");
+                credits.replaceChildren();
+                $("stamps").replaceChildren();
+                for (const entry of entries) {
+                    const stamp = el("li", "bird-stamp" + (entry.rare ? " rare" : ""));
+                    const photo = stamp.appendChild(el("span", "stamp-photo"));
+                    if (/^https:\/\//.test(entry.photo ?? "")) {
+                        const img = photo.appendChild(el("img"));
+                        img.src = entry.photo;
+                        img.alt = "";
+                        img.loading = "lazy";
+                        // A licensed photo is shown with its credit: here, in the list under the stamps
+                        if (entry.credit) credits.appendChild(el("li", "", `${entry.name}: ${entry.credit}`));
+                    } else {
+                        photo.textContent = entry.name.split(/\s+/).map((word) => word[0]).join("").slice(0, 3);
+                    }
+                    stamp.appendChild(el("span", "stamp-name", entry.name));
+                    const when = [entry.found ? shortDate(dayOf(entry.found)) : null, entry.spot].filter(Boolean).join(" · ");
+                    if (when) stamp.appendChild(el("span", "stamp-when", when));
+                    if (entry.rare) stamp.appendChild(el("span", "stamp-rare", "Rare find"));
+                    const remove = stamp.appendChild(el("button", "stamp-remove", "×"));
+                    remove.type = "button";
+                    remove.setAttribute("aria-label", `Remove ${entry.name} from the journal`);
+                    remove.addEventListener("click", () => forgetBird(entry.key));
+                    $("stamps").appendChild(stamp);
+                }
+                $("journal-credits").hidden = !credits.children.length;
+            }
+            document.addEventListener("collection-changed", showJournal);
+            $("clear-seen").addEventListener("click", clearSeen);
+            showJournal();
+
+            // --- Setting up a quest on the map: click where you are, pick how long you have ---
+
+            let picker = null;
+            let pickedPoint = null;
+            $("setup").addEventListener("toggle", () => {
+                if (!$("setup").open) return;
+                // Made on first opening: a map has no size to measure while its section is folded
+                picker ??= createPicker($("picker"), (value) => {
+                    pickedPoint = value;
+                    $("plan-here").disabled = false;
+                    $("picker-note").textContent = `You are at ${value.lat}, ${value.lng}. The shaded circle is roughly how far you could walk and still have time to look around: about ${value.reachKm} km. It is an estimate.`;
+                });
+                if (picker) picker.refresh();
+                else $("picker-note").textContent = "The map could not be loaded. Type where you are instead.";
+            });
+            for (const chip of document.querySelectorAll(".time-chip")) {
+                chip.addEventListener("click", () => {
+                    for (const other of document.querySelectorAll(".time-chip")) other.setAttribute("aria-pressed", String(other === chip));
+                    picker?.setMinutes(Number(chip.dataset.minutes));
+                });
+            }
+            $("locate").addEventListener("click", () => {
+                if (!navigator.geolocation || !picker) return void ($("picker-note").textContent = "Your browser can't share your location here. Click the map instead.");
+                $("picker-note").textContent = "Asking your browser where you are…";
+                navigator.geolocation.getCurrentPosition(
+                    (position) => picker.setPoint(position.coords.latitude, position.coords.longitude),
+                    () => ($("picker-note").textContent = "Couldn't get your location. Click the map instead."),
+                    { timeout: 10000 },
+                );
+            });
+            $("plan-here").addEventListener("click", () => {
+                if (!pickedPoint || $("run").disabled) return;
+                const time = document.querySelector('.time-chip[aria-pressed="true"]').dataset.words;
+                const extra = $("question").value.trim();
+                ask(`I'm at latitude ${pickedPoint.lat}, longitude ${pickedPoint.lng} (a point I picked on the map) and I have ${time}.${extra ? " " + extra : ""}`);
+                $("setup").open = false;
+            });
+
+            $("toggle-context").addEventListener("click", () => {
+                const open = document.body.classList.toggle("show-context");
+                $("toggle-context").textContent = open ? "Hide what each agent saw" : "Show what each agent saw";
+                if (open && runId) {
+                    resetContext();
+                    showContext(runId);
+                }
+            });
+        </script>
+    </body>
+</html>
