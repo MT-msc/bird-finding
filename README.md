@@ -3,7 +3,7 @@
 "Find me something cool to see outside." Bird Side Quests is a deep research agent for **beginner birdwatchers in New York City**. You say where you are and how long you have, and it turns the last few weeks of volunteer bird sightings into a short outing plan: which nearby spot to walk to, which birds were reported there, which of them are unusual for the place and season, and how well the evidence holds up. Every fact links to the sighting record it came from.
 
 - **Path:** Deep Research (`"path": "research"`)
-- **Deployed at:** see `deploy_url` in [submission.json](submission.json)
+- **Deployed at:** https://bird-finding-git-638434810531.europe-west1.run.app (Columbia sign-in required)
 - **Author:** sm5917
 
 ## Three sample queries
