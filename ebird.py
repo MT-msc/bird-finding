@@ -9,9 +9,7 @@ import os
 import httpx
 
 API_URL = "https://api.ebird.org/v2"
-# The API refuses anything further back than this.
 MAX_DAYS_BACK = 30
-# The API's widest search radius, in km.
 MAX_DIST_KM = 50
 
 

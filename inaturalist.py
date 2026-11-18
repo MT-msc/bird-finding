@@ -10,18 +10,14 @@ from datetime import date, timedelta
 import httpx
 
 API_URL = "https://api.inaturalist.org/v1"
-# iNaturalist asks automated clients to say who they are.
 HEADERS = {"User-Agent": "bird-side-quests/0.1 (student course project)"}
-# Aves, the taxon every bird sits under.
 BIRDS = 3
-# The API's page size limit. A busy fortnight near a big park fits in one page.
 MAX_OBSERVATIONS = 200
 
 
 def _get(path: str, **params) -> dict:
     response = httpx.get(
         API_URL + path,
-        # verifiable: has a date, a place and a photo or sound, and isn't a captive bird
         params={"verifiable": "true", **{k: v for k, v in params.items() if v is not None}},
         headers=HEADERS,
         timeout=30,

@@ -26,17 +26,12 @@ from context_panel import AgentContexts, PanelHooks, add_context_panel
 
 HERE = Path(__file__).parent
 
-# EBIRD_API_KEY comes from the .env file next to this one. On Cloud Run it is set on the service instead.
 load_dotenv(HERE / ".env")
 
-# Traces upload to OpenAI by default, which needs an OpenAI key. We're on Gemini.
 set_tracing_disabled(True)
 
-# LiteLLM routes the call to Gemini. api_key is unused: Vertex AI uses your gcloud credentials.
 MODEL = LitellmModel(model="vertex_ai/gemini-3.5-flash", api_key="unused")
-# Researchers only read records and take notes: the cheaper model is enough.
 RESEARCHER_MODEL = LitellmModel(model="vertex_ai/gemini-3.5-flash-lite", api_key="unused")
-# A stalled model call would hang the page: give up after 90 s, and retry twice.
 SETTINGS = ModelSettings(extra_args={"vertex_location": "global", "timeout": 90, "num_retries": 2})
 
 WRITER_SETTINGS = ModelSettings(extra_args=SETTINGS.extra_args, reasoning=Reasoning(effort="low"))
@@ -107,7 +102,6 @@ def distance_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
 
 
 def _answer(what: str, build) -> str:
-    # The model cannot see an exception. Return something it can reason about.
     try:
         return json.dumps(build(), ensure_ascii=False)
     except httpx.HTTPStatusError as e:
